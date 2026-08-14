@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: #f8f9fa;
+    --bg-card: #ffffff;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+  }
+
+  body {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* 3D Isometric Stacking Engine */
+.perspective-container {
+  perspective: 1400px;
+  perspective-origin: 50% 45%;
+}
+
+.isometric-transform-base {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.layer-card-base {
+  transform-style: preserve-3d;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  backface-visibility: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* Waveform Bars Animation */
+@keyframes voicePulse {
+  0%, 100% {
+    height: 12%;
+    opacity: 0.5;
+  }
+  50% {
+    height: 95%;
+    opacity: 1;
+  }
+}
+
+.animate-voice-bar {
+  animation: voicePulse 1.2s ease-in-out infinite;
+}
+
+/* Gradient text utilities */
+.text-gradient-google {
+  background: linear-gradient(135deg, #4285F4 0%, #EA4335 30%, #FBBC05 70%, #34A853 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-cisco {
+  background: linear-gradient(135deg, #049FD9 0%, #0D274D 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-willow {
+  background: linear-gradient(135deg, #E06D53 0%, #F48B67 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Subtle grid texture */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+
+.dark .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
