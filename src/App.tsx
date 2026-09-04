@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayerStack3D } from './components/LayerStack3D';
 import { ScrollytellingSection } from './components/ScrollytellingSection';
-import { InteractiveLatencySimulator } from './components/InteractiveLatencySimulator';
+import { RecommendationsSection } from './components/RecommendationsSection';
 import { Footer } from './components/Footer';
 import type { LayerId } from './types';
-import { ChevronDown, Sparkles } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 export function App() {
   const heroTrackRef = useRef<HTMLDivElement>(null);
@@ -29,8 +29,8 @@ export function App() {
       colorClass: 'text-emerald-600',
     },
     google: {
-      name: 'Google',
-      subtext: 'AI & Transformers',
+      name: 'Dialogflow CX',
+      subtext: 'Conversational AI Services',
       colorClass: 'text-blue-600',
     },
   };
@@ -168,25 +168,13 @@ export function App() {
         </div>
       </section>
 
-      {/* SECTION 3: Live Call Latency Simulator */}
+      {/* SECTION 3: Technical Recommendations & Webhook Fallback Sandbox */}
       <section
-        id="simulator-section"
-        className="relative z-10 bg-[#F7F7F6] border-t border-slate-200/80 pt-16 pb-20 shadow-xs"
+        id="recommendations-section"
+        className="relative z-10 bg-[#F7F7F6] border-t border-slate-200/80 pt-16 pb-24 shadow-xs"
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-mono font-medium text-slate-600 mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-[#C26D45]" />
-            Live Scenario Simulator
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 tracking-tight">
-            Penske Call Round-Trip Execution Trace
-          </h2>
-          <p className="text-sm text-slate-500 max-w-2xl mx-auto mt-2">
-            Step through a simulated voice call from truck driver speech to Cisco telephony, dedicated network fiber transit, and Google AI processing.
-          </p>
-        </div>
-
-        <InteractiveLatencySimulator />
+        <div id="simulator-section" className="sr-only" />
+        <RecommendationsSection />
       </section>
 
       {/* SECTION 4: Engineering Whitepaper Footer */}

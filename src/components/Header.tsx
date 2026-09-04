@@ -62,10 +62,10 @@ export const Header: React.FC<HeaderProps> = ({ onJumpToSection }) => {
             Story Deconstruction
           </button>
           <button
-            onClick={() => onJumpToSection('simulator-section')}
+            onClick={() => onJumpToSection('recommendations-section')}
             className="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           >
-            Call Simulator
+            Recommendations
           </button>
           <button
             onClick={() => onJumpToSection('issues-section')}

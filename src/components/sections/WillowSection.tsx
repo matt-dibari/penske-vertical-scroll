@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Volume2, Play, Pause, ArrowUpRight, ExternalLink, Ticket, Clock, Ear, PhoneForwarded } from 'lucide-react';
+import { Volume2, Play, Pause, ArrowUpRight, ExternalLink, Ticket, Clock, Ear, PhoneForwarded, VolumeX } from 'lucide-react';
 
 interface AudioTrack {
   id: string;
@@ -7,72 +7,101 @@ interface AudioTrack {
   title: string;
   durationSeconds: number;
   src?: string;
-  baseBars: number[];
+  startTime?: number;
+  endTime?: number;
+  baseBars?: number[];
+  isInformationalOnly?: boolean;
+  timeRangeLabel?: string;
 }
 
-interface TicketItem {
+interface GoogleSupportCase {
   id: string;
+  category: string;
   title: string;
-  component: string;
-  status: 'In Progress' | 'Under Investigation' | 'Patch Verified' | 'Fix Deployed' | 'Resolved';
-  priority: 'P1 - Critical' | 'P2 - High';
   description: string;
+  status: 'Closed' | 'Waiting for customer response';
+  isNew?: boolean;
 }
 
-const MAX_CLIP_SECONDS = 20;
 const NUM_BARS = 12; // 12 clean, well-spaced amplitude bars
 
-const GOOGLE_TICKETS: TicketItem[] = [
+const GOOGLE_SUPPORT_CASES: GoogleSupportCase[] = [
   {
-    id: 'GCP-84920',
-    title: 'Dialogflow CX Initial Turn Dead Air',
-    component: 'Dialogflow CX / gRPC',
-    status: 'Under Investigation',
-    priority: 'P1 - Critical',
-    description: 'Initial session initialization latency and greeting turnaround delay.',
+    id: '71012177',
+    category: 'Dialogflow & DFCX Latency and Performance',
+    title: 'Fix/Mitigation Implemented',
+    description: 'Google rolled out LLM (Vertex) and TTS latency hedges (retry function in the production project) to mitigate long-tail latency on the Google side. Further log analysis revealed audio streaming discrepancies on the integration side (e.g., a 10-second audio clip streamed in 4 seconds between Cisco and Dialogflow).',
+    status: 'Closed',
   },
   {
-    id: 'GCP-84931',
-    title: 'Chirp 2 STT Recognition Dropouts',
-    component: 'Cloud Speech-to-Text',
-    status: 'In Progress',
-    priority: 'P1 - Critical',
-    description: 'Speech recognition dropouts and acoustic model sensitivity.',
+    id: '71020311',
+    category: 'Capacity & Resource Management',
+    title: 'Gemini 2.5 Flash Resource Exhaustion & Timeouts',
+    description: 'This case focused on Gemini 2.5 Flash generators exhausting resources and ignoring timeouts. A capacity increase or traffic management adjustments were noted.',
+    status: 'Closed',
   },
   {
-    id: 'GCP-84988',
-    title: 'Speculative Token Streaming Pipeline Gap',
-    component: 'Journey TTS',
-    status: 'Fix Deployed',
-    priority: 'P2 - High',
-    description: 'Early-sentence synthesis chunking for faster voice response.',
-  },
-];
-
-const CISCO_TICKETS: TicketItem[] = [
-  {
-    id: 'CSC-49102',
-    title: 'VVB RTP Packet Buffer Batching Lag',
-    component: 'Virtual Voice Browser',
-    status: 'Patch Verified',
-    priority: 'P1 - Critical',
-    description: 'Audio buffer frame packetization tuning for carrier streams.',
+    id: '71956846',
+    category: 'Dialogflow & DFCX Latency and Performance',
+    title: 'Chirp 3 TTS Voice Engine Latency Isolation',
+    description: 'Split off from primary latency concerns specifically to isolate Chirp 3 TTS (Chirp/Wavenet) voice engine latency.',
+    status: 'Closed',
   },
   {
-    id: 'CSC-49118',
-    title: 'CUBE SIP Transfer Mute Gap Renegotiation',
-    component: 'CUBE / CVP',
-    status: 'In Progress',
-    priority: 'P1 - Critical',
-    description: 'Re-INVITE session renegotiation during live agent transfer.',
+    id: '72126157',
+    category: 'Audio Quality & Mid-Call Failures',
+    title: 'Dialogflow CX Audio Going Silent on OnError Event',
+    description: 'Addressed Dialogflow CX agent audio going silent midway through calls where Google sends an OnError event.',
+    status: 'Closed',
   },
   {
-    id: 'CSC-49145',
-    title: 'CCAI Connector gRPC Streaming Micro-Chunking',
-    component: 'Webex CC / CCAI',
-    status: 'Resolved',
-    priority: 'P2 - High',
-    description: 'RTP stream packetization into Dialogflow CX channel.',
+    id: '74277770',
+    category: 'Spikes in Errors & Timeouts',
+    title: 'Extreme Spikes of RPC Errors with Dialogflow',
+    description: 'Addressed extreme spikes of RPC errors with Dialogflow.',
+    status: 'Closed',
+  },
+  {
+    id: '74166142',
+    category: 'Dialogflow & DFCX Latency and Performance',
+    title: 'Log Analysis for Intermittent Unexpected Silences',
+    description: 'Continuation of case 71012177, requesting assistance with log analysis for intermittent unexpected silences.',
+    status: 'Closed',
+  },
+  {
+    id: '64274054',
+    category: 'Audio Quality & Mid-Call Failures',
+    title: 'Dialogflow Audio Utterances Cut Off in WXCC Past 30 Seconds',
+    description: 'Addressed Dialogflow audio utterances being cut off in WXCC past 30 seconds.',
+    status: 'Closed',
+  },
+  {
+    id: '67101075',
+    category: 'Conversational Agents / Dialogflow CX',
+    title: 'Dialogflow CX Confirmed Service Issue',
+    description: 'Service Issue Confirmed. Logged as a service issue that was addressed.',
+    status: 'Closed',
+  },
+  {
+    id: '62352943',
+    category: 'Audio Quality & Mid-Call Failures',
+    title: 'DFCX Agent Audio Cut Off with Cisco Integration',
+    description: 'Addressed audio output from DFCX agent being cut off in conversational experience with Cisco integration.',
+    status: 'Closed',
+  },
+  {
+    id: '61605262',
+    category: 'Audio Quality & Mid-Call Failures',
+    title: 'Static Audio from Caller Side on Inbound Calls',
+    description: 'Addressed static audio from the caller side on inbound calls.',
+    status: 'Closed',
+  },
+  {
+    id: '61446874',
+    category: 'Spikes in Errors & Timeouts',
+    title: 'Spikes of Timeouts in Dialogflow CX',
+    description: 'Addressed spikes of timeouts in Dialogflow CX.',
+    status: 'Closed',
   },
 ];
 
@@ -80,12 +109,12 @@ export const WillowSection: React.FC = () => {
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [liveBars, setLiveBars] = useState<number[]>(new Array(NUM_BARS).fill(14));
-  const [ticketTab, setTicketTab] = useState<'google' | 'cisco'>('google');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
+  const activeAudioIdRef = useRef<string | null>(null);
 
   const AUDIO_RECORDINGS: AudioTrack[] = [
     {
@@ -94,23 +123,34 @@ export const WillowSection: React.FC = () => {
       title: 'Issue 1: Long delay before greeting',
       durationSeconds: 20,
       src: '/Initial-Greeting-Delay.wav',
+      startTime: 0,
+      endTime: 20,
+      timeRangeLabel: '0:00 – 0:20',
       baseBars: [14, 14, 14, 14, 14, 14, 14, 14, 14, 65, 85, 95],
     },
     {
       id: 'audio-issue-2',
       issueNumber: 2,
       title: 'Issue 2: Willow did not hear or understand',
-      durationSeconds: 20,
+      durationSeconds: 22,
+      src: '/no-input.wav',
+      startTime: 18,
+      endTime: 40,
+      timeRangeLabel: '0:18 – 0:40',
       baseBars: [45, 75, 85, 45, 18, 65, 85, 55, 25, 40, 75, 60],
     },
     {
       id: 'audio-issue-3',
       issueNumber: 3,
       title: 'Issue 3: Silence when transferred to live person',
-      durationSeconds: 20,
-      baseBars: [60, 85, 65, 20, 14, 14, 14, 14, 14, 14, 45, 80],
+      durationSeconds: 0,
+      isInformationalOnly: true,
     },
   ];
+
+  useEffect(() => {
+    activeAudioIdRef.current = activeAudioId;
+  }, [activeAudioId]);
 
   const updateLiveAmplitudes = useCallback(() => {
     if (!analyserRef.current || !activeAudioId) return;
@@ -143,17 +183,23 @@ export const WillowSection: React.FC = () => {
     rafRef.current = requestAnimationFrame(updateLiveAmplitudes);
   }, [activeAudioId]);
 
-  // Audio Playback & 15-Second Enforcement
+  // Audio Playback Enforcement
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const handleTimeUpdate = () => {
-      if (audio.currentTime >= MAX_CLIP_SECONDS) {
+      const active = AUDIO_RECORDINGS.find((t) => t.id === activeAudioIdRef.current);
+      if (!active) return;
+
+      const startSec = active.startTime ?? 0;
+      const endSec = active.endTime ?? (startSec + active.durationSeconds);
+
+      if (audio.currentTime >= endSec) {
         audio.pause();
-        audio.currentTime = 0;
+        audio.currentTime = startSec;
         setActiveAudioId(null);
-        setCurrentTime(0);
+        setCurrentTime(startSec);
         setLiveBars(new Array(NUM_BARS).fill(14));
       } else {
         setCurrentTime(audio.currentTime);
@@ -161,8 +207,10 @@ export const WillowSection: React.FC = () => {
     };
 
     const handleEnded = () => {
+      const active = AUDIO_RECORDINGS.find((t) => t.id === activeAudioIdRef.current);
+      const startSec = active?.startTime ?? 0;
       setActiveAudioId(null);
-      setCurrentTime(0);
+      setCurrentTime(startSec);
       setLiveBars(new Array(NUM_BARS).fill(14));
     };
 
@@ -215,6 +263,7 @@ export const WillowSection: React.FC = () => {
   };
 
   const toggleAudio = (track: AudioTrack) => {
+    if (track.isInformationalOnly || !track.src) return;
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -224,22 +273,23 @@ export const WillowSection: React.FC = () => {
       audio.pause();
       setActiveAudioId(null);
     } else {
-      if (track.src) {
-        if (audio.src !== window.location.origin + track.src && !audio.src.endsWith(track.src)) {
-          audio.src = track.src;
-          audio.currentTime = 0;
-        }
-        audio.play().catch(err => console.log('Playback error:', err));
-        setActiveAudioId(track.id);
-      } else {
-        audio.pause();
-        setActiveAudioId(track.id);
+      const startSec = track.startTime ?? 0;
+      const endSec = track.endTime ?? (startSec + track.durationSeconds);
+
+      if (!audio.src.endsWith(track.src)) {
+        audio.src = track.src;
+        audio.currentTime = startSec;
+      } else if (audio.currentTime < startSec || audio.currentTime >= endSec) {
+        audio.currentTime = startSec;
       }
+      audio.play().catch((err) => console.log('Playback error:', err));
+      setActiveAudioId(track.id);
+      setCurrentTime(audio.currentTime);
     }
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>, track: AudioTrack) => {
-    if (!track.src) return;
+    if (track.isInformationalOnly || !track.src) return;
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -247,15 +297,17 @@ export const WillowSection: React.FC = () => {
 
     const rect = e.currentTarget.getBoundingClientRect();
     const clickRatio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const targetTime = clickRatio * MAX_CLIP_SECONDS;
+    const startSec = track.startTime ?? 0;
+    const endSec = track.endTime ?? (startSec + track.durationSeconds);
+    const targetTime = startSec + clickRatio * (endSec - startSec);
 
-    if (audio.src !== window.location.origin + track.src && !audio.src.endsWith(track.src)) {
+    if (!audio.src.endsWith(track.src)) {
       audio.src = track.src;
     }
     audio.currentTime = targetTime;
     setCurrentTime(targetTime);
     if (activeAudioId !== track.id) {
-      audio.play().catch(err => console.log('Playback error:', err));
+      audio.play().catch((err) => console.log('Playback error:', err));
       setActiveAudioId(track.id);
     }
   };
@@ -264,20 +316,6 @@ export const WillowSection: React.FC = () => {
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${m}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const getStatusBadge = (status: TicketItem['status']) => {
-    switch (status) {
-      case 'Resolved':
-      case 'Fix Deployed':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'Patch Verified':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'In Progress':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'Under Investigation':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
-    }
   };
 
   return (
@@ -338,7 +376,7 @@ export const WillowSection: React.FC = () => {
         </div>
       </div>
 
-      {/* 3 Call Recordings Cards (Clean, 12-bar live amplitude) */}
+      {/* 3 Call Recordings Cards */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
           <Volume2 className="w-4 h-4 text-slate-700" />
@@ -349,6 +387,31 @@ export const WillowSection: React.FC = () => {
           {AUDIO_RECORDINGS.map((track) => {
             const isPlaying = activeAudioId === track.id;
 
+            if (track.isInformationalOnly) {
+              return (
+                <div
+                  key={track.id}
+                  className="p-4 rounded-2xl border border-slate-200 bg-white shadow-2xs flex items-center justify-between gap-4 transition-all"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center shrink-0 shadow-2xs">
+                      <VolumeX className="w-4 h-4 text-slate-500" />
+                    </div>
+
+                    <h5 className="text-sm font-semibold text-slate-900">
+                      {track.title}
+                    </h5>
+                  </div>
+
+                  {/* Silence visual: orange circle and line */}
+                  <div className="h-8 flex items-center gap-2 px-3 rounded-lg bg-slate-50 border border-slate-200/80">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                    <div className="w-20 sm:w-28 h-0.5 bg-slate-300 rounded-full" />
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={track.id}
@@ -358,13 +421,23 @@ export const WillowSection: React.FC = () => {
                   <button
                     onClick={() => toggleAudio(track)}
                     className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-black transition-colors shrink-0 shadow-xs cursor-pointer"
+                    aria-label={isPlaying ? 'Pause sample' : 'Play sample'}
                   >
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 translate-x-0.5" />}
                   </button>
 
-                  <h5 className="text-sm font-semibold text-slate-900">
-                    {track.title}
-                  </h5>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h5 className="text-sm font-semibold text-slate-900">
+                        {track.title}
+                      </h5>
+                      {track.timeRangeLabel && (
+                        <span className="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 font-medium">
+                          {track.timeRangeLabel}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* 12-Bar Live Amplitude Waveform + Timecode */}
@@ -372,8 +445,9 @@ export const WillowSection: React.FC = () => {
                   <div
                     onClick={(e) => handleSeek(e, track)}
                     className="h-8 flex items-center gap-1.5 cursor-pointer py-1 px-1 rounded-lg hover:bg-slate-50 transition-colors"
+                    title="Click to seek within clip window"
                   >
-                    {track.baseBars.map((baseH, bIdx) => {
+                    {(track.baseBars || []).map((baseH, bIdx) => {
                       const currentHeight = isPlaying
                         ? Math.max(14, (liveBars[bIdx] || baseH))
                         : baseH;
@@ -392,7 +466,9 @@ export const WillowSection: React.FC = () => {
                     })}
                   </div>
                   <span className="text-xs font-mono text-slate-500 w-12 text-right font-medium">
-                    {isPlaying ? formatTime(currentTime) : '0:00'}
+                    {isPlaying
+                      ? formatTime(currentTime)
+                      : formatTime(track.startTime ?? 0)}
                   </span>
                 </div>
               </div>
@@ -401,63 +477,47 @@ export const WillowSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Opened Tickets Table with Google / Cisco Switcher */}
+      {/* Opened Google Support Cases */}
       <div className="space-y-3 pt-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
             <Ticket className="w-4 h-4 text-blue-600" />
-            <span>Opened Vendor Escalation Tickets</span>
+            <span>Google Cloud Support Cases ({GOOGLE_SUPPORT_CASES.length})</span>
           </div>
 
-          {/* Tab Switcher */}
+          {/* All Tab */}
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80 font-mono text-xs">
-            <button
-              onClick={() => setTicketTab('google')}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                ticketTab === 'google'
-                  ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Google Cloud ({GOOGLE_TICKETS.length})
-            </button>
-            <button
-              onClick={() => setTicketTab('cisco')}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                ticketTab === 'cisco'
-                  ? 'bg-[#049FD9] text-white shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Cisco Systems ({CISCO_TICKETS.length})
-            </button>
+            <span className="px-3 py-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white shadow-2xs">
+              All ({GOOGLE_SUPPORT_CASES.length})
+            </span>
           </div>
         </div>
 
         {/* Tickets List */}
         <div className="divide-y divide-slate-150 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
-          {(ticketTab === 'google' ? GOOGLE_TICKETS : CISCO_TICKETS).map((ticket) => (
+          {GOOGLE_SUPPORT_CASES.map((ticket) => (
             <div key={ticket.id} className="p-4 hover:bg-slate-50/70 transition-colors space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-mono text-xs font-bold text-slate-900">
-                    {ticket.id}
+                    Case {ticket.id}
                   </span>
                   <span className="text-slate-300">·</span>
                   <span className="text-xs font-semibold text-slate-800">
                     {ticket.title}
                   </span>
+                  {ticket.isNew && (
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                      New Case
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                    {ticket.component}
+                    {ticket.category}
                   </span>
-                  <span
-                    className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${getStatusBadge(
-                      ticket.status
-                    )}`}
-                  >
+                  <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">
                     {ticket.status}
                   </span>
                 </div>

@@ -163,7 +163,7 @@ export const INFRASTRUCTURE_LAYERS: LayerInfo[] = [
         title: 'LLM Complete-Response Wait Delay',
         description: 'Legacy pipeline waited for the full LLM sentence response to finish generation before sending text to the TTS engine.',
         impact: 'Added 600-800ms unnecessary latency for multi-sentence answers.',
-        fix: 'Engineered speculative early-token streaming: the first 6-8 words of Gemini response stream instantly into Journey TTS.',
+        fix: 'Deployed Vertex LLM and TTS latency hedges with retry mechanisms to mitigate long-tail latency on the Google side.',
         resolvedBy: 'Google',
       },
       {
